@@ -20,87 +20,77 @@ class WorkoutTrackerClient extends StatelessWidget {
 }
 
 class Set {
+  num reps = 0;
+  num weight = 0;
+
   Set({this.reps, this.weight});
 
-  num reps;
-  num weight;
-}
-
-class SetView extends StatelessWidget {
-  SetView({this.set});
-
-  final Set set;
-
-  @override
-  build(BuildContext context){
-    return new Column(
-      children: <Widget>[
-        new Text(set.reps.toString()),
-        new Text(set.weight.toString()),
-      ]
-    );
+  Set.fromResponse(Map s){
+    this.reps = s['reps'];
+    this.weight = s['weight'];
   }
 }
 
 class Exercise {
-  Exercise({this.name, this.date, this.title, this.sets, this.isExpanded});
-
   bool isExpanded;
-
   String name;
   String date;
   String title;
   List<Set> sets;
-}
 
+  Exercise({this.name, this.date, this.title, this.sets, this.isExpanded});
 
-class ExerciseView extends StatelessWidget {
-  ExerciseView({this.exercise});
-
-  final Exercise exercise;
-
-  @override
-  build(BuildContext context){
-    //TODO: clean this up
-    Exercise displayExercise = new Exercise();
-    if(exercise != null){
-      displayExercise.name = exercise.name ?? "name";
-      displayExercise.date = exercise.date ?? "date";
-      displayExercise.title = exercise.title ?? "title";
-      displayExercise.sets = exercise.sets ?? [];
-    }
-    else {
-      displayExercise.name = "name";
-      displayExercise.date = "date";
-      displayExercise.title = "title";
-      displayExercise.sets = [];
-    }
-
-    List<SetView> setViews = [];
-    for(num i = 0; i < displayExercise.sets.length; i++){
-      setViews.add(new SetView(set: displayExercise.sets[i]));
-    }
-
-    return new Column(
-      children: <Widget>[
-        new Text('name: '+displayExercise.name),
-        new Text('date: '+displayExercise.date),
-        new Text('title: '+displayExercise.title),
-        new Column(
-          children: setViews
-        )
-      ]
-    );
+  Exercise.defaultValues() {
+    this.isExpanded = false;
+    this.name = "exercise name";
+    this.date = "exercise date";
+    this.title = "exercise title";
+    this.sets = [];
   }
+
+  Exercise.fromResponse(Map r) {
+    this.isExpanded = false;
+    this.name = r['name'] ?? "exercise name";
+    this.date = r['date'] ?? "exercise date";
+    this.title = r['title'] ?? "exercise title";
+
+    List<Set> sets = [];
+    for(num j = 0; j < r['sets'].length; j++){
+      sets.add(new Set.fromResponse(r['sets'][j]));
+    }
+    this.sets = sets;
+  }
+
 }
 
 class Workout {
-  Workout({this.name, this.date, this.title, this.exercises});
-
   String name;
   String date;
   String title;
   List<Exercise> exercises;
+
+  Workout({this.name, this.date, this.title, this.exercises});
+
+  Workout.defaultValues() {
+    this.name = "workout name";
+    this.date = "workout date";
+    this.title = "workout title";
+    this.exercises = [];
+  }
+
+  Workout.fromResponse(Map r) {
+    this.name = r['name'] ?? "workout name";
+    this.date = r['date'] ?? "workout date";
+    this.title = r['title'] ?? "workout title";
+
+    List<Exercise> exercises = [];
+    for(num i = 0; i < r['exercises'].length; i++){
+      exercises.add(new Exercise.fromResponse(r['exercises'][i]));
+    }
+    this.exercises = exercises;
+  }
+
+
 }
 
 
@@ -119,25 +109,10 @@ class _WorkoutViewState extends State<WorkoutView>{
 
   @override
   Widget build(BuildContext context){
-    if(widget.workout == null){
-      displayWorkout = new Workout(name: "name", date: "date", title: "title", exercises: []);
-    }
-    else {
-      displayWorkout = widget.workout;
-    }
-
-    List<ExerciseView> exerciseViews = [];
-    for(num i = 0; i < displayWorkout.exercises.length; i++){
-      exerciseViews.add(new ExerciseView(exercise: displayWorkout.exercises[i]));
-    }
-
-    List<SetView> setViews = [];
+    displayWorkout = widget.workout ?? new Workout.defaultValues();
 
     return new Column(
       children: <Widget>[
-        new Text('name: '+displayWorkout.name),
-        new Text('date: '+displayWorkout.date),
-        new Text('title: '+displayWorkout.title),
         new ExpansionPanelList(
           children: displayWorkout.exercises.map((Exercise e) {
             return new ExpansionPanel(
@@ -203,7 +178,7 @@ class MainView extends StatefulWidget {
 
 class _MainViewState extends State<MainView> {
   String _currWorkoutDate = '2017-11-11';
-  Workout _currWorkout;
+  Workout _currWorkout = new Workout.defaultValues();
 
   _getWorkout() async {
     String url = 'http://192.168.1.2:8080/api/workouts/date/'+_currWorkoutDate;
@@ -211,28 +186,10 @@ class _MainViewState extends State<MainView> {
     var response = await httpClient.read(url);
     Map data = JSON.decode(response);
 
-    String name = data['name'];
-    String date = data['date'];
-    String title = data['title'];
-    List responseExercises = data['exercises'];
-
-    List<Exercise> exercises = [];
-    List<Set> sets = [];
-    for(num i = 0; i < responseExercises.length; i++){
-
-      sets = [];
-      for(num j = 0; j < responseExercises[i]['sets'].length; j++){
-        sets.add(new Set(reps: responseExercises[i]['sets'][j]['reps'], weight: responseExercises[i]['sets'][j]['weight']));
-      }
-
-      exercises.add(new Exercise(name: responseExercises[i]['name'], title: responseExercises[i]['title'], date: responseExercises[i]['date'], sets: sets, isExpanded: false));
-    }
-
-
     if (!mounted) return;
 
     setState(() {
-      _currWorkout = new Workout(name: name, date: date, title: title, exercises: exercises);
+      _currWorkout = new Workout.fromResponse(data);
     });
 
   }
@@ -248,7 +205,7 @@ class _MainViewState extends State<MainView> {
   Widget build(BuildContext context) {
     return new Scaffold(
       appBar: new AppBar(
-        title: new Text(widget.title),
+        title: new Text(_currWorkout.title + " (" + _currWorkout.date + ")"),
       ),
       body: new Container(
         padding: const EdgeInsets.all(16.0),
