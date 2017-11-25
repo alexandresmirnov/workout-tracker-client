@@ -29,6 +29,19 @@ class Set {
     this.reps = s['reps'];
     this.weight = s['weight'];
   }
+
+  createDataRow(){
+    return new DataRow(
+      cells: <DataCell>[
+        new DataCell(
+          new Text(this.reps.toString())
+        ),
+        new DataCell(
+          new Text(this.weight.toString())
+        )
+      ]
+    );
+  }
 }
 
 class Exercise {
@@ -59,6 +72,39 @@ class Exercise {
       sets.add(new Set.fromResponse(r['sets'][j]));
     }
     this.sets = sets;
+  }
+
+  createExpansionPanel() {
+    return new ExpansionPanel(
+      headerBuilder: (BuildContext context, bool isExpanded) {
+        return new ListTile(
+          title: new Text(
+            this.title,
+            textAlign: TextAlign.left,
+            style: new TextStyle(
+              fontSize: 20.0,
+              fontWeight: FontWeight.w400,
+            ),
+          )
+        );
+      },
+      body: new DataTable(
+        columns: <DataColumn>[
+          new DataColumn(
+            label: new Text("reps"),
+            numeric: true
+          ),
+          new DataColumn(
+            label: new Text("weight"),
+            numeric: true
+          )
+        ],
+        rows: this.sets.map((Set s) {
+          return s.createDataRow();
+        }).toList()
+      ),
+      isExpanded: this.isExpanded
+    );
   }
 
 }
@@ -115,46 +161,7 @@ class _WorkoutViewState extends State<WorkoutView>{
       children: <Widget>[
         new ExpansionPanelList(
           children: displayWorkout.exercises.map((Exercise e) {
-            return new ExpansionPanel(
-              headerBuilder: (BuildContext context, bool isExpanded) {
-                return new ListTile(
-                  title: new Text(
-                    e.title,
-                    textAlign: TextAlign.left,
-                    style: new TextStyle(
-                      fontSize: 20.0,
-                      fontWeight: FontWeight.w400,
-                    ),
-                  )
-                );
-              },
-              body: new DataTable(
-                columns: <DataColumn>[
-                  new DataColumn(
-                    label: new Text("reps"),
-                    numeric: true
-                  ),
-                  new DataColumn(
-                    label: new Text("weight"),
-                    numeric: true
-                  )
-                ],
-                rows: e.sets.map((Set s) {
-                  return new DataRow(
-                    cells: <DataCell>[
-                      new DataCell(
-                        new Text(s.reps.toString())
-                      ),
-                      new DataCell(
-                        new Text(s.weight.toString())
-                      )
-                    ]
-                  );
-                }).toList()
-              ),
-              isExpanded: e.isExpanded
-
-            );
+            return e.createExpansionPanel();
           }).toList(),
           expansionCallback: (int panelIndex, bool isExpanded) {
             setState(() {
@@ -218,8 +225,9 @@ class _MainViewState extends State<MainView> {
       floatingActionButton: new FloatingActionButton(
         onPressed: () {
           setState(() {
-            _currWorkoutDate = '2017-11-21';
+            _currWorkoutDate = '2017-11-10';
           });
+          _getWorkout();
         },
         tooltip: 'Increment',
         child: new Icon(Icons.add),
