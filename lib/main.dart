@@ -50,16 +50,9 @@ class Exercise {
   String name;
   String date;
   String title;
-  List sets;
+  List<Set> sets;
 }
 
-class ExercisePanel {
-  bool isExpanded;
-  final String header;
-  final Widget body;
-  final Icon iconpic;
-  ExercisePanel(this.isExpanded, this.header, this.body, this.iconpic);
-}
 
 class ExerciseView extends StatelessWidget {
   ExerciseView({this.exercise});
@@ -138,14 +131,13 @@ class _WorkoutViewState extends State<WorkoutView>{
       exerciseViews.add(new ExerciseView(exercise: displayWorkout.exercises[i]));
     }
 
+    List<SetView> setViews = [];
+
     return new Column(
       children: <Widget>[
         new Text('name: '+displayWorkout.name),
         new Text('date: '+displayWorkout.date),
         new Text('title: '+displayWorkout.title),
-        new Column(
-          children: exerciseViews
-        ),
         new ExpansionPanelList(
           children: displayWorkout.exercises.map((Exercise e) {
             return new ExpansionPanel(
@@ -161,7 +153,30 @@ class _WorkoutViewState extends State<WorkoutView>{
                   )
                 );
               },
-              body: new Text('body'),
+              body: new DataTable(
+                columns: <DataColumn>[
+                  new DataColumn(
+                    label: new Text("reps"),
+                    numeric: true
+                  ),
+                  new DataColumn(
+                    label: new Text("weight"),
+                    numeric: true
+                  )
+                ],
+                rows: e.sets.map((Set s) {
+                  return new DataRow(
+                    cells: <DataCell>[
+                      new DataCell(
+                        new Text(s.reps.toString())
+                      ),
+                      new DataCell(
+                        new Text(s.weight.toString())
+                      )
+                    ]
+                  );
+                }).toList()
+              ),
               isExpanded: e.isExpanded
 
             );
@@ -187,7 +202,7 @@ class MainView extends StatefulWidget {
 }
 
 class _MainViewState extends State<MainView> {
-  String _currWorkoutDate = '2017-11-10';
+  String _currWorkoutDate = '2017-11-11';
   Workout _currWorkout;
 
   _getWorkout() async {
