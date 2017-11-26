@@ -45,7 +45,6 @@ class WorkoutTrackerClient extends StatelessWidget {
       ),
       routes: <String, WidgetBuilder>{
         '/': (BuildContext context) => new WorkoutList(),
-        '/t': (BuildContext context) => new SingleWorkout(date: '2017-11-11'),
       },
       onGenerateRoute: _getRoute,
     );

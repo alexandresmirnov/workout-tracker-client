@@ -50,11 +50,30 @@ class _WorkoutListState extends State<WorkoutList>{
   Widget build(BuildContext context){
     return new Scaffold(
       appBar: new AppBar(
-        title: new Text("all workouts"),
+        title: new Text("All Workouts"),
       ),
-      body: new Container(
-        padding: const EdgeInsets.all(16.0),
-        child: new Text('test')
+      body: new DataTable(
+        columns: <DataColumn>[
+          new DataColumn(
+            label: new Text("Name")
+          ),
+          new DataColumn(
+            label: new Text("Type"),
+          ),
+          new DataColumn(
+            label: new Text("Date"),
+          ),
+          new DataColumn(
+            label: new Text("Exercises"),
+          )
+        ],
+        rows: this._metaWorkouts.map((MetaWorkout mw) {
+          return mw.createDataRow(
+            onTap: () {
+              Navigator.of(context).pushNamed('/workouts/date/'+mw.date);
+            }
+          );
+        }).toList()
       ),
     );
   }

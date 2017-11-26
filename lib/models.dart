@@ -119,6 +119,29 @@ class MetaWorkout {
     this.type = r['type'] ?? "workout type";
     this.exercises = r['exercises'] ?? [];
   }
+
+  createDataRow({Function onTap}){
+    return new DataRow(
+      cells: <DataCell>[
+        new DataCell(
+          new Text(this.name),
+          onTap: onTap
+        ),
+        new DataCell(
+          new Text(this.type),
+          onTap: onTap
+        ),
+        new DataCell(
+          new Text(this.date),
+          onTap: onTap
+        ),
+        new DataCell(
+          new Text(this.exercises.length.toString()),
+          onTap: onTap
+        )
+      ]
+    );
+  }
 }
 
 class Workout {

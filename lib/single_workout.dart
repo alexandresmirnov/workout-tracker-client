@@ -59,14 +59,7 @@ class _SingleWorkoutState extends State<SingleWorkout>{
             )
           ]
         )
-      ),
-      floatingActionButton: new FloatingActionButton(
-        onPressed: () {
-          Navigator.of(context).pushNamed('/workouts/date/2017-11-10');
-        },
-        tooltip: 'Increment',
-        child: new Icon(Icons.add),
-      ),
+      )
     );
   }
 }
