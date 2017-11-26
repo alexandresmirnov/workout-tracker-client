@@ -7,6 +7,34 @@ void main() {
 }
 
 class WorkoutTrackerClient extends StatelessWidget {
+
+  //taken from:
+  //https://github.com/flutter/flutter/blob/master/examples/stocks/lib/main.dart#L122
+  Route<Null> _getRoute(RouteSettings settings) {
+    // Routes, by convention, are split on slashes, like filesystem paths.
+    final List<String> path = settings.name.split('/');
+    // We only support paths that start with a slash, so bail if
+    // the first component is not empty:
+    if (path[0] != '')
+      return null;
+    // If the path is "/workout/date/..." then show a workout page for the
+    // specified workout date.
+    if (path[1] == 'workout' && path[2] == 'date') {
+      // We need a date, otherwise return
+      if (path[3] == null)
+        return null;
+      // Extract the date of "workout/date/..." and return a route
+      // for that symbol.
+      final String date = path[3];
+      return new MaterialPageRoute<Null>(
+        settings: settings,
+        builder: (BuildContext context) => new WorkoutView(date: date),
+      );
+    }
+    // The other paths we support are in the routes table.
+    return null;
+  }
+
   @override
   Widget build(BuildContext context) {
     return new MaterialApp(
@@ -14,7 +42,10 @@ class WorkoutTrackerClient extends StatelessWidget {
       theme: new ThemeData(
         primarySwatch: Colors.blue,
       ),
-      home: new MainView(title: 'Workout Tracker'),
+      routes: <String, WidgetBuilder>{
+         '/': (BuildContext context) => new MainView(),
+      },
+      onGenerateRoute: _getRoute,
     );
   }
 }
@@ -33,6 +64,9 @@ class Set {
   createDataRow(){
     return new DataRow(
       cells: <DataCell>[
+        new DataCell(
+          new Text("1")
+        ),
         new DataCell(
           new Text(this.reps.toString())
         ),
@@ -91,6 +125,10 @@ class Exercise {
       body: new DataTable(
         columns: <DataColumn>[
           new DataColumn(
+            label: new Text("sets"),
+            numeric: true
+          ),
+          new DataColumn(
             label: new Text("reps"),
             numeric: true
           ),
@@ -141,9 +179,9 @@ class Workout {
 
 
 class WorkoutView extends StatefulWidget {
-  WorkoutView({Key key, this.workout}) : super(key: key);
+  WorkoutView({Key key, this.date}) : super(key: key);
 
-  final Workout workout;
+  final String date;
 
   @override
   _WorkoutViewState createState() => new _WorkoutViewState();
@@ -151,44 +189,10 @@ class WorkoutView extends StatefulWidget {
 
 class _WorkoutViewState extends State<WorkoutView>{
 
-  Workout displayWorkout;
+  Workout _displayWorkout = new Workout.defaultValues();
 
-  @override
-  Widget build(BuildContext context){
-    displayWorkout = widget.workout ?? new Workout.defaultValues();
-
-    return new Column(
-      children: <Widget>[
-        new ExpansionPanelList(
-          children: displayWorkout.exercises.map((Exercise e) {
-            return e.createExpansionPanel();
-          }).toList(),
-          expansionCallback: (int panelIndex, bool isExpanded) {
-            setState(() {
-              displayWorkout.exercises[panelIndex].isExpanded = !isExpanded;
-            });
-          }
-        )
-      ]
-    );
-  }
-}
-
-class MainView extends StatefulWidget {
-  MainView({Key key, this.title}) : super(key: key);
-
-  final String title;
-
-  @override
-  _MainViewState createState() => new _MainViewState();
-}
-
-class _MainViewState extends State<MainView> {
-  String _currWorkoutDate = '2017-11-11';
-  Workout _currWorkout = new Workout.defaultValues();
-
-  _getWorkout() async {
-    String url = 'http://192.168.1.2:8080/api/workouts/date/'+_currWorkoutDate;
+  _getWorkout(date) async {
+    String url = 'http://192.168.1.2:8080/api/workouts/date/'+date;
     var httpClient = createHttpClient();
     var response = await httpClient.read(url);
     Map data = JSON.decode(response);
@@ -196,7 +200,7 @@ class _MainViewState extends State<MainView> {
     if (!mounted) return;
 
     setState(() {
-      _currWorkout = new Workout.fromResponse(data);
+      _displayWorkout = new Workout.fromResponse(data);
     });
 
   }
@@ -205,33 +209,56 @@ class _MainViewState extends State<MainView> {
   initState() {
     super.initState();
 
-    _getWorkout();
+    _getWorkout(widget.date);
   }
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context){
     return new Scaffold(
       appBar: new AppBar(
-        title: new Text(_currWorkout.title + " (" + _currWorkout.date + ")"),
+        title: new Text(_displayWorkout.title + " (" + _displayWorkout.date + ")"),
       ),
       body: new Container(
         padding: const EdgeInsets.all(16.0),
         child: new Column(
           children: <Widget>[
-            new WorkoutView(workout: _currWorkout),
-          ],
-        ),
+            new ExpansionPanelList(
+              children: _displayWorkout.exercises.map((Exercise e) {
+                return e.createExpansionPanel();
+              }).toList(),
+              expansionCallback: (int panelIndex, bool isExpanded) {
+                setState(() {
+                  _displayWorkout.exercises[panelIndex].isExpanded = !isExpanded;
+                });
+              }
+            )
+          ]
+        )
       ),
       floatingActionButton: new FloatingActionButton(
         onPressed: () {
-          setState(() {
-            _currWorkoutDate = '2017-11-10';
-          });
-          _getWorkout();
+          Navigator.of(context).pushNamed('/workout/date/2017-11-10');
+          //_getWorkout('2017-11-10');
         },
         tooltip: 'Increment',
         child: new Icon(Icons.add),
-      ), // This trailing comma makes auto-formatting nicer for build methods.
+      ),
     );
+  }
+}
+
+class MainView extends StatefulWidget {
+  MainView({Key key}) : super(key: key);
+
+
+  @override
+  _MainViewState createState() => new _MainViewState();
+}
+
+class _MainViewState extends State<MainView> {
+
+  @override
+  Widget build(BuildContext context) {
+    return new WorkoutView(date: '2017-11-11');
   }
 }
