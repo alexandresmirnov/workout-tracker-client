@@ -1,5 +1,24 @@
 import 'package:flutter/material.dart';
 
+String monthFromInt(int month){
+  switch(month){
+    case 1: return "Jan";
+    case 2: return "Feb";
+    case 3: return "Mar";
+    case 4: return "Apr";
+    case 5: return "May";
+    case 6: return "Jun";
+    case 7: return "Jul";
+    case 8: return "Aug";
+    case 9: return "Sep";
+    case 10: return "Oct";
+    case 11: return "Nov";
+    case 12: return "Dec";
+  }
+
+  return "Nan";
+}
+
 class Set {
   num reps = 0;
   num weight = 0;
@@ -99,6 +118,7 @@ class Exercise {
 
 //for when exercises aren't populated
 class MetaWorkout {
+  bool isExpanded;
   String type;
   String date;
   String name;
@@ -111,6 +131,7 @@ class MetaWorkout {
     this.date = "workout date";
     this.type = "workout type";
     this.exercises = [];
+    this.isExpanded = false;
   }
 
   MetaWorkout.fromResponse(Map r) {
@@ -118,6 +139,7 @@ class MetaWorkout {
     this.date = r['date'] ?? "workout date";
     this.type = r['type'] ?? "workout type";
     this.exercises = r['exercises'] ?? [];
+    this.isExpanded = false;
   }
 
   createDataRow({Function onTap}){
@@ -139,6 +161,86 @@ class MetaWorkout {
           new Text(this.exercises.length.toString()),
           onTap: onTap
         )
+      ]
+    );
+  }
+
+  createListTile({Function onTap}){
+    DateTime date = DateTime.parse(this.date);
+    return new Container(
+      /* disables InkWell, see: https://github.com/flutter/flutter/issues/3782
+      decoration: new BoxDecoration(
+        color: Colors.white,
+      ),
+      */
+      child: new ListTile(
+        leading: new CircleAvatar(
+          radius: 20.0,
+          backgroundColor: Colors.teal.shade500,
+          child: new Container(
+            margin: const EdgeInsets.only(top: 5.0),
+            child: new Column(
+              children: [
+                new Text(
+                  date.day.toString(),
+                  style: new TextStyle(
+                    fontSize: 18.0,
+                  )
+                ),
+                new Text(
+                  monthFromInt(date.month),
+                  style: new TextStyle(
+                    fontSize: 8.0
+                  )
+                ),
+              ]
+            )
+          )
+        ),
+        title: new Text(this.name),
+        onTap: onTap,
+      )
+    );
+  }
+
+  createExpansionPanel({Function onTap}) {
+    return new ExpansionPanel(
+      headerBuilder: (BuildContext context, bool isExpanded) {
+        return new ListTile(
+          title: new Text(
+            this.name,
+            textAlign: TextAlign.left,
+            style: new TextStyle(
+              fontSize: 20.0,
+              fontWeight: FontWeight.w400,
+            ),
+          ),
+          onTap: onTap ?? (){}
+        );
+      },
+      body: new Column(
+        children: <Widget>[
+          new Text("Date: "+this.date),
+          new Text("Number of exercises: "+this.exercises.length.toString())
+        ]
+      ),
+      isExpanded: this.isExpanded
+    );
+  }
+
+  createExpansionTile({Function onTap}) {
+    return new ExpansionTile(
+      title: new Text(
+        this.name,
+        textAlign: TextAlign.left,
+        style: new TextStyle(
+          fontSize: 20.0,
+          fontWeight: FontWeight.w400,
+        ),
+      ),
+      children: <Widget>[
+        new Text("Date: "+this.date),
+        new Text("Number of exercises: "+this.exercises.length.toString())
       ]
     );
   }

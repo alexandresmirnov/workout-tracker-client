@@ -52,28 +52,21 @@ class _WorkoutListState extends State<WorkoutList>{
       appBar: new AppBar(
         title: new Text("All Workouts"),
       ),
-      body: new DataTable(
-        columns: <DataColumn>[
-          new DataColumn(
-            label: new Text("Name")
-          ),
-          new DataColumn(
-            label: new Text("Type"),
-          ),
-          new DataColumn(
-            label: new Text("Date"),
-          ),
-          new DataColumn(
-            label: new Text("Exercises"),
-          )
-        ],
-        rows: this._metaWorkouts.map((MetaWorkout mw) {
-          return mw.createDataRow(
-            onTap: () {
-              Navigator.of(context).pushNamed('/workouts/date/'+mw.date);
-            }
-          );
-        }).toList()
+      body: new Container(
+        child: new ListView(
+          //padding: const EdgeInsets.all(16.0),
+          children: ListTile.divideTiles(
+            context: context,
+            tiles: this._metaWorkouts.map((MetaWorkout mw) {
+              return mw.createListTile(
+                onTap: (){
+                  Navigator.of(context).pushNamed('/workouts/date/'+mw.date);
+                }
+              );
+            }),
+            color: new Color(0xFF333333)
+          ).toList()
+        ),
       ),
     );
   }
