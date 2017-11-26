@@ -32,16 +32,16 @@ class Exercise {
   bool isExpanded;
   String name;
   String date;
-  String title;
+  String type;
   List<Set> sets;
 
-  Exercise({this.name, this.date, this.title, this.sets, this.isExpanded});
+  Exercise({this.name, this.date, this.type, this.sets, this.isExpanded});
 
   Exercise.defaultValues() {
     this.isExpanded = false;
     this.name = "exercise name";
     this.date = "exercise date";
-    this.title = "exercise title";
+    this.type = "exercise type";
     this.sets = [];
   }
 
@@ -49,7 +49,7 @@ class Exercise {
     this.isExpanded = false;
     this.name = r['name'] ?? "exercise name";
     this.date = r['date'] ?? "exercise date";
-    this.title = r['title'] ?? "exercise title";
+    this.type = r['type'] ?? "exercise type";
 
     List<Set> sets = [];
     for(num j = 0; j < r['sets'].length; j++){
@@ -63,7 +63,7 @@ class Exercise {
       headerBuilder: (BuildContext context, bool isExpanded) {
         return new ListTile(
           title: new Text(
-            this.title,
+            this.name,
             textAlign: TextAlign.left,
             style: new TextStyle(
               fontSize: 20.0,
@@ -99,24 +99,24 @@ class Exercise {
 
 //for when exercises aren't populated
 class MetaWorkout {
-  String name;
+  String type;
   String date;
-  String title;
+  String name;
   List<String> exercises;
 
-  MetaWorkout({this.name, this.date, this.title, this.exercises});
+  MetaWorkout({this.name, this.date, this.type, this.exercises});
 
   MetaWorkout.defaultValues() {
     this.name = "workout name";
     this.date = "workout date";
-    this.title = "workout title";
+    this.type = "workout type";
     this.exercises = [];
   }
 
   MetaWorkout.fromResponse(Map r) {
     this.name = r['name'] ?? "workout name";
     this.date = r['date'] ?? "workout date";
-    this.title = r['title'] ?? "workout title";
+    this.type = r['type'] ?? "workout type";
     this.exercises = r['exercises'] ?? [];
   }
 }
@@ -124,22 +124,22 @@ class MetaWorkout {
 class Workout {
   String name;
   String date;
-  String title;
+  String type;
   List<Exercise> exercises;
 
-  Workout({this.name, this.date, this.title, this.exercises});
+  Workout({this.name, this.date, this.type, this.exercises});
 
   Workout.defaultValues() {
     this.name = "workout name";
     this.date = "workout date";
-    this.title = "workout title";
+    this.type = "workout type";
     this.exercises = [];
   }
 
   Workout.fromResponse(Map r) {
     this.name = r['name'] ?? "workout name";
     this.date = r['date'] ?? "workout date";
-    this.title = r['title'] ?? "workout title";
+    this.type = r['type'] ?? "workout type";
 
     List<Exercise> exercises = [];
     for(num i = 0; i < r['exercises'].length; i++){

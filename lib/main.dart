@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import 'single_workout.dart';
+import 'workout_list.dart';
 
 void main() {
   runApp(new WorkoutTrackerClient());
@@ -17,13 +18,13 @@ class WorkoutTrackerClient extends StatelessWidget {
     // the first component is not empty:
     if (path[0] != '')
       return null;
-    // If the path is "/workout/date/..." then show a workout page for the
+    // If the path is "/workouts/date/..." then show a workout page for the
     // specified workout date.
-    if (path[1] == 'workout' && path[2] == 'date') {
+    if (path[1] == 'workouts' && path[2] == 'date') {
       // We need a date, otherwise return
       if (path[3] == null)
         return null;
-      // Extract the date of "workout/date/..." and return a route
+      // Extract the date of "workouts/date/..." and return a route
       // for that symbol.
       final String date = path[3];
       return new MaterialPageRoute<Null>(
@@ -43,7 +44,8 @@ class WorkoutTrackerClient extends StatelessWidget {
         primarySwatch: Colors.blue,
       ),
       routes: <String, WidgetBuilder>{
-         '/': (BuildContext context) => new SingleWorkout(date: '2017-11-11'),
+        '/': (BuildContext context) => new WorkoutList(),
+        '/t': (BuildContext context) => new SingleWorkout(date: '2017-11-11'),
       },
       onGenerateRoute: _getRoute,
     );

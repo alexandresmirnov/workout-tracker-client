@@ -41,7 +41,7 @@ class _SingleWorkoutState extends State<SingleWorkout>{
   Widget build(BuildContext context){
     return new Scaffold(
       appBar: new AppBar(
-        title: new Text(_displayWorkout.title + " (" + _displayWorkout.date + ")"),
+        title: new Text(_displayWorkout.name + " (" + _displayWorkout.date + ")"),
       ),
       body: new Container(
         padding: const EdgeInsets.all(16.0),
@@ -62,8 +62,7 @@ class _SingleWorkoutState extends State<SingleWorkout>{
       ),
       floatingActionButton: new FloatingActionButton(
         onPressed: () {
-          Navigator.of(context).pushNamed('/workout/date/2017-11-10');
-          //_getWorkout('2017-11-10');
+          Navigator.of(context).pushNamed('/workouts/date/2017-11-10');
         },
         tooltip: 'Increment',
         child: new Icon(Icons.add),
