@@ -48,16 +48,14 @@ class Set {
 }
 
 class Exercise {
-  bool isExpanded;
   String name;
   String date;
   String type;
   List<Set> sets;
 
-  Exercise({this.name, this.date, this.type, this.sets, this.isExpanded});
+  Exercise({this.name, this.date, this.type, this.sets});
 
   Exercise.defaultValues() {
-    this.isExpanded = false;
     this.name = "exercise name";
     this.date = "exercise date";
     this.type = "exercise type";
@@ -65,7 +63,6 @@ class Exercise {
   }
 
   Exercise.fromResponse(Map r) {
-    this.isExpanded = false;
     this.name = r['name'] ?? "exercise name";
     this.date = r['date'] ?? "exercise date";
     this.type = r['type'] ?? "exercise type";
@@ -77,7 +74,7 @@ class Exercise {
     this.sets = sets;
   }
 
-  createExpansionPanel() {
+  ExpansionPanel toExpansionPanel({isExpanded}) {
     return new ExpansionPanel(
       headerBuilder: (BuildContext context, bool isExpanded) {
         return new ListTile(
@@ -110,7 +107,7 @@ class Exercise {
           return s.createDataRow();
         }).toList()
       ),
-      isExpanded: this.isExpanded
+      isExpanded: isExpanded
     );
   }
 
@@ -118,7 +115,6 @@ class Exercise {
 
 //for when exercises aren't populated
 class MetaWorkout {
-  bool isExpanded;
   String type;
   String date;
   String name;
@@ -131,7 +127,6 @@ class MetaWorkout {
     this.date = "workout date";
     this.type = "workout type";
     this.exercises = [];
-    this.isExpanded = false;
   }
 
   MetaWorkout.fromResponse(Map r) {
@@ -139,7 +134,6 @@ class MetaWorkout {
     this.date = r['date'] ?? "workout date";
     this.type = r['type'] ?? "workout type";
     this.exercises = r['exercises'] ?? [];
-    this.isExpanded = false;
   }
 
   createDataRow({Function onTap}){
@@ -168,11 +162,6 @@ class MetaWorkout {
   createListTile({Function onTap}){
     DateTime date = DateTime.parse(this.date);
     return new Container(
-      /* disables InkWell, see: https://github.com/flutter/flutter/issues/3782
-      decoration: new BoxDecoration(
-        color: Colors.white,
-      ),
-      */
       child: new ListTile(
         leading: new CircleAvatar(
           radius: 20.0,
@@ -198,50 +187,9 @@ class MetaWorkout {
           )
         ),
         title: new Text(this.name),
+        subtitle: new Text(this.type),
         onTap: onTap,
       )
-    );
-  }
-
-  createExpansionPanel({Function onTap}) {
-    return new ExpansionPanel(
-      headerBuilder: (BuildContext context, bool isExpanded) {
-        return new ListTile(
-          title: new Text(
-            this.name,
-            textAlign: TextAlign.left,
-            style: new TextStyle(
-              fontSize: 20.0,
-              fontWeight: FontWeight.w400,
-            ),
-          ),
-          onTap: onTap ?? (){}
-        );
-      },
-      body: new Column(
-        children: <Widget>[
-          new Text("Date: "+this.date),
-          new Text("Number of exercises: "+this.exercises.length.toString())
-        ]
-      ),
-      isExpanded: this.isExpanded
-    );
-  }
-
-  createExpansionTile({Function onTap}) {
-    return new ExpansionTile(
-      title: new Text(
-        this.name,
-        textAlign: TextAlign.left,
-        style: new TextStyle(
-          fontSize: 20.0,
-          fontWeight: FontWeight.w400,
-        ),
-      ),
-      children: <Widget>[
-        new Text("Date: "+this.date),
-        new Text("Number of exercises: "+this.exercises.length.toString())
-      ]
     );
   }
 }

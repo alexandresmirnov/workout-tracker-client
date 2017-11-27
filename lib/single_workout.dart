@@ -16,6 +16,7 @@ class SingleWorkout extends StatefulWidget {
 class _SingleWorkoutState extends State<SingleWorkout>{
 
   Workout _displayWorkout = new Workout.defaultValues();
+  List<bool> _expansionControl = [];
 
   _getWorkout(date) async {
     String url = 'http://192.168.1.2:8080/api/workouts/date/'+date;
@@ -27,6 +28,10 @@ class _SingleWorkoutState extends State<SingleWorkout>{
 
     setState(() {
       _displayWorkout = new Workout.fromResponse(data);
+
+      for(int i = 0; i < _displayWorkout.exercises.length; i++){
+        _expansionControl.add(false);
+      }
     });
   }
 
@@ -39,6 +44,13 @@ class _SingleWorkoutState extends State<SingleWorkout>{
 
   @override
   Widget build(BuildContext context){
+
+    List<ExpansionPanel> panels = [];
+
+    for(int i = 0; i < _displayWorkout.exercises.length; i++){
+      panels.add(_displayWorkout.exercises[i].toExpansionPanel(isExpanded: _expansionControl[i]));
+    }
+
     return new Scaffold(
       appBar: new AppBar(
         title: new Text(_displayWorkout.name + " (" + _displayWorkout.date + ")"),
@@ -48,12 +60,10 @@ class _SingleWorkoutState extends State<SingleWorkout>{
         child: new Column(
           children: <Widget>[
             new ExpansionPanelList(
-              children: _displayWorkout.exercises.map((Exercise e) {
-                return e.createExpansionPanel();
-              }).toList(),
+              children: panels,
               expansionCallback: (int panelIndex, bool isExpanded) {
                 setState(() {
-                  _displayWorkout.exercises[panelIndex].isExpanded = !isExpanded;
+                  _expansionControl[panelIndex] = !isExpanded;
                 });
               }
             )
