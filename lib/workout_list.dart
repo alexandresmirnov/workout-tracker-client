@@ -24,7 +24,7 @@ class _WorkoutListState extends State<WorkoutList>{
 
     //convert response objects into MetaWorkouts
     List<MetaWorkout> metaWorkouts = [];
-    for(num i = 0; i < data.length; i++){
+    for(int i = 0; i < data.length; i++){
       metaWorkouts.add(new MetaWorkout.fromResponse(data[i]));
     }
 
@@ -53,19 +53,22 @@ class _WorkoutListState extends State<WorkoutList>{
         title: new Text("All Workouts"),
       ),
       body: new Container(
-        child: new ListView(
-          //padding: const EdgeInsets.all(16.0),
-          children: ListTile.divideTiles(
-            context: context,
-            tiles: this._metaWorkouts.map((MetaWorkout mw) {
-              return mw.createListTile(
-                onTap: (){
-                  Navigator.of(context).pushNamed('/workouts/date/'+mw.date);
-                }
-              );
-            }),
-            color: new Color(0xFF333333)
-          ).toList()
+        padding: const EdgeInsets.all(16.0),
+        child: new Card(
+          child: new Column(
+            mainAxisSize: MainAxisSize.min,
+            children: ListTile.divideTiles(
+              context: context,
+              tiles: this._metaWorkouts.map((MetaWorkout mw) {
+                return mw.createListTile(
+                  onTap: (){
+                    Navigator.of(context).pushNamed('/workouts/date/'+mw.date);
+                  }
+                );
+              }),
+              color: new Color(0xFFAAAAAA)
+            ).toList()
+          )
         ),
       ),
     );

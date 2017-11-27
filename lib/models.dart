@@ -20,8 +20,8 @@ String monthFromInt(int month){
 }
 
 class Set {
-  num reps = 0;
-  num weight = 0;
+  int reps = 0;
+  int weight = 0;
 
   Set({this.reps, this.weight});
 
@@ -71,7 +71,7 @@ class Exercise {
     this.type = r['type'] ?? "exercise type";
 
     List<Set> sets = [];
-    for(num j = 0; j < r['sets'].length; j++){
+    for(int j = 0; j < r['sets'].length; j++){
       sets.add(new Set.fromResponse(r['sets'][j]));
     }
     this.sets = sets;
@@ -267,7 +267,7 @@ class Workout {
     this.type = r['type'] ?? "workout type";
 
     List<Exercise> exercises = [];
-    for(num i = 0; i < r['exercises'].length; i++){
+    for(int i = 0; i < r['exercises'].length; i++){
       exercises.add(new Exercise.fromResponse(r['exercises'][i]));
     }
     this.exercises = exercises;
