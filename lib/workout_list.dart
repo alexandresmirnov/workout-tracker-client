@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'dart:convert';
 
 import 'models.dart';
+import 'data_interface.dart';
 
 //creates list with meta workouts that lead to SingleWorkout
 class WorkoutList extends StatefulWidget {
@@ -17,26 +18,12 @@ class _WorkoutListState extends State<WorkoutList>{
   List<MetaWorkout> _metaWorkouts = [];
 
   _getMetaWorkouts() async {
-    String url = 'http://192.168.1.2:8080/api/workouts/meta/';
-    var httpClient = createHttpClient();
-    var response = await httpClient.read(url);
-    List data = JSON.decode(response); //list of objects to be converted
-
-    //convert response objects into MetaWorkouts
-    List<MetaWorkout> metaWorkouts = [];
-    for(int i = 0; i < data.length; i++){
-      metaWorkouts.add(new MetaWorkout.fromResponse(data[i]));
-    }
-
-    print(data[0]);
+    DataInterface di = new DataInterface(apiLocation: "http://192.168.1.2:8080/api");
+    List<MetaWorkout> metaWorkouts = await di.getMetaWorkouts();
 
     setState(() {
       _metaWorkouts = metaWorkouts;
-      print('_metaWorkouts[0].name after response: ' + _metaWorkouts[0].name);
     });
-
-    if (!mounted) return;
-
   }
 
   @override

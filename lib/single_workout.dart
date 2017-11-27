@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'dart:convert';
 
 import 'models.dart';
+import 'data_interface.dart';
 
 class SingleWorkout extends StatefulWidget {
   SingleWorkout({Key key, this.date}) : super(key: key);
@@ -19,15 +20,11 @@ class _SingleWorkoutState extends State<SingleWorkout>{
   List<bool> _expansionControl = [];
 
   _getWorkout(date) async {
-    String url = 'http://192.168.1.2:8080/api/workouts/date/'+date;
-    var httpClient = createHttpClient();
-    var response = await httpClient.read(url);
-    Map data = JSON.decode(response);
-
-    if (!mounted) return;
+    DataInterface di = new DataInterface(apiLocation: "http://192.168.1.2:8080/api");
+    Workout w = await di.getWorkout(date);
 
     setState(() {
-      _displayWorkout = new Workout.fromResponse(data);
+      _displayWorkout = w;
 
       for(int i = 0; i < _displayWorkout.exercises.length; i++){
         _expansionControl.add(false);
