@@ -1,4 +1,4 @@
-package com.yourcompany.workouttrackerclient;
+package com.alexandresmirnov.workouttracker;
 
 import android.os.Bundle;
 
