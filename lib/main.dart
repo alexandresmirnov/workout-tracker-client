@@ -10,7 +10,9 @@ doDataStuff() async {
   DatabaseInterface di = new DatabaseInterface();
   await di.open();
 
-  int id = await di.addMetaWorkout(new MetaWorkout(type: "pull", date: "2017-11-18"));
+  int exerciseid = await di.addMetaExercise(new MetaExercise(type: "exercise test 1", date: "2017-11-13", sets: []));
+
+  int id = await di.addMetaWorkout(new MetaWorkout(type: "pull", date: "2017-11-18", exercises: [exerciseid]));
 
   await di.close();
   //MetaWorkout testing = await di.getMetaWorkoutByID(id);
@@ -26,6 +28,7 @@ doDataStuff() async {
 }
 
 void main() {
+  //doDataStuff();
   runApp(new WorkoutTracker());
 }
 
@@ -59,7 +62,7 @@ class _WorkoutTrackerState extends State<WorkoutTracker> {
       final String date = path[3];
       return new MaterialPageRoute<Null>(
         settings: settings,
-        builder: (BuildContext context) => new SingleWorkout(date: date),
+        builder: (BuildContext context) => new SingleWorkout(interface: widget.interface, date: date),
       );
     }
     // The other paths we support are in the routes table.

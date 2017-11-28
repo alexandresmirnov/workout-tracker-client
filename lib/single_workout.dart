@@ -4,9 +4,10 @@ import 'models.dart';
 import 'data_interface.dart';
 
 class SingleWorkout extends StatefulWidget {
-  SingleWorkout({Key key, this.date}) : super(key: key);
-
+  final DatabaseInterface interface;
   final String date;
+
+  SingleWorkout({Key key, this.interface, this.date}) : super(key: key);
 
   @override
   _SingleWorkoutState createState() => new _SingleWorkoutState();
@@ -18,11 +19,23 @@ class _SingleWorkoutState extends State<SingleWorkout>{
   List<bool> _expansionControl = [];
 
   _getWorkout(date) async {
-    ApiInterface interface = new ApiInterface(apiLocation: "http://192.168.1.2:8080/api");
-    Workout w = await interface.getWorkout(date);
+    await widget.interface.open();
+
+    List<Workout> workouts = await widget.interface.getWorkoutsByDate(date);
+    await widget.interface.close();
+
+    Workout displayWorkout;
+
+    if(workouts.length > 0){
+      displayWorkout = workouts.first;
+    }
+    else {
+      displayWorkout = new Workout.defaultValues();
+    }
+
 
     setState(() {
-      _displayWorkout = w;
+      _displayWorkout = displayWorkout;
 
       for(int i = 0; i < _displayWorkout.exercises.length; i++){
         _expansionControl.add(false);

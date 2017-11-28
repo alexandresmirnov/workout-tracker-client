@@ -53,6 +53,7 @@ class MetaExercise {
   String date;
   String type;
   String sets; //textual representation of an array of int ids of sets
+  //List<int> sets;
 
   MetaExercise({this.id, this.date, this.type, this.sets});
 
@@ -168,7 +169,7 @@ class Exercise {
         ],
         rows: this.sets.map((Set s) {
           return s.createDataRow();
-        }).toList()
+        }).toList(),
       ),
       isExpanded: isExpanded
     );
@@ -184,6 +185,7 @@ class MetaWorkout {
   String date;
   String name; //soon to be removed in favor of type->name lookup table
   String exercises; //textual representation of an array of int ids of exercises
+  //List<int> exercises;
 
   MetaWorkout({this.id, this.name, this.date, this.type, this.exercises});
 
@@ -225,14 +227,16 @@ class MetaWorkout {
 
 //object used when actually displaying a workout
 class Workout {
+  int id;
   String name;
   String date;
   String type;
   List<Exercise> exercises;
 
-  Workout({this.name, this.date, this.type, this.exercises});
+  Workout({this.id, this.name, this.date, this.type, this.exercises});
 
   Workout.defaultValues() {
+    this.id = 0;
     this.name = "workout name";
     this.date = "workout date";
     this.type = "workout type";
@@ -240,6 +244,7 @@ class Workout {
   }
 
   Workout.fromMap(Map r) {
+    this.id = r['name'] ?? 0;
     this.name = r['name'] ?? "workout name";
     this.date = r['date'] ?? "workout date";
     this.type = r['type'] ?? "workout type";
@@ -302,7 +307,7 @@ class Workout {
           )
         ),
         title: new Text(this.name),
-        subtitle: new Text(this.type),
+        subtitle: new Text(this.type + ", id:" + this.id.toString()),
         onTap: onTap,
       )
     );
