@@ -12,12 +12,165 @@ import 'models.dart';
  * also, this will manage the local SQL database and sync operations
  */
 
-class DataInterface {
+class DatabaseInterface {
+
+  Database database;
+
+  int timeStamp(){
+    return new DateTime.now().millisecondsSinceEpoch ~/ 1000 | 0;
+  }
+
+  open() async {
+    String dir = (await getApplicationDocumentsDirectory()).path;
+
+    print(dir + "assets/data.db");
+
+    Database database = await openDatabase(dir + "assets/data.db", version: 1,
+      onCreate: (Database db, int version) async {
+        print('successfully created');
+        // When creating the db (for the very first time), create the table
+        await db.execute(
+          "CREATE TABLE workouts (id INTEGER PRIMARY KEY, type TEXT, date TEXT, exercises TEXT)");
+        await db.execute(
+          "CREATE TABLE exercises (id INTEGER PRIMARY KEY, type TEXT, date TEXT, sets TEXT)");
+      }
+    );
+
+    this.database = database;
+  }
+
+  close() async {
+    await database.close();
+  }
+
+  String listToString(List l){
+    String result = "";
+
+    for(int i = 0; i < l.length; i++){
+      result += l[i].toString();
+      if(i < l.length - 1){
+        result += ",";
+      }
+    }
+
+    return(result);
+  }
+
+  List<String> stringToList(String s){
+    return s.split(",");
+  }
+
+  List<int> stringToIntList(String s){
+    List<String> stringList = stringToList(s);
+    List<int> intList = [];
+
+    for(int i = 0; i < stringList.length; i++){
+      intList.add(int.parse(stringList[i]));
+    }
+
+    return intList;
+  }
+
+  //MetaWorkout operations
+  addMetaWorkout(MetaWorkout mw) async {
+    int timestamp = timeStamp();
+
+    MetaWorkout insert = new MetaWorkout(id: timestamp, type: mw.type, date: mw.date, exercises: mw.exercises);
+
+    await database.insert("workouts", insert.toMap());
+
+    return timestamp;
+  }
+
+  getMetaWorkoutByID(int id) async {
+    List<Map> maps = await database.query("workouts",
+        columns: ["id", "type", "date", "exercises"],
+        where: "id = ?",
+        whereArgs: [id]);
+    if (maps.length > 0) {
+      return new MetaWorkout.fromMap(maps.first);
+    }
+  }
+
+  getMetaWorkoutsByDate(String date) async {
+    List<Map> maps = await database.query("workouts",
+        columns: ["id", "type", "date", "exercises"],
+        where: "date = ?",
+        whereArgs: [date]);
+
+    List<MetaWorkout> result = [];
+    for(int i = 0; i < maps.length; i++){
+      result.add(new MetaWorkout.fromMap(maps[i]));
+    }
+
+    return result;
+  }
+
+  getAllMetaWorkouts() async {
+    List<Map> maps = await database.query("workouts");
+
+    List<MetaWorkout> result = [];
+    for(int i = 0; i < maps.length; i++){
+      result.add(new MetaWorkout.fromMap(maps[i]));
+    }
+
+    return result;
+  }
+
+  //Exercise operations
+  addMetaExercise(MetaExercise e) async {
+    int timestamp = timeStamp();
+
+    MetaExercise insert = new MetaExercise(id: timestamp, type: e.type, date: e.date, sets: e.sets);
+
+    await database.insert("exercises", insert.toMap());
+
+    return timestamp;
+  }
+
+  getMetaExerciseByID(int id) async {
+    List<Map> maps = await database.query("exercises",
+        columns: ["id", "type", "date", "sets"],
+        where: "id = ?",
+        whereArgs: [id]);
+    if (maps.length > 0) {
+      return new MetaExercise.fromMap(maps.first);
+    }
+  }
+
+  getMetaExercisesByDate(String date) async {
+    List<Map> maps = await database.query("exercises",
+        columns: ["id", "type", "date", "sets"],
+        where: "date = ?",
+        whereArgs: [date]);
+
+    List<MetaExercise> result = [];
+    for(int i = 0; i < maps.length; i++){
+      result.add(new MetaExercise.fromMap(maps[i]));
+    }
+
+    return result;
+  }
+
+  getAllMetaExercises() async {
+    List<Map> maps = await database.query("workouts");
+
+    List<MetaExercise> result = [];
+    for(int i = 0; i < maps.length; i++){
+      result.add(new MetaExercise.fromMap(maps[i]));
+    }
+
+    return result;
+  }
+}
+
+//for interacting with server
+class ApiInterface {
 
   String apiLocation;
   var client = createHttpClient();
 
-  DataInterface({this.apiLocation});
+  ApiInterface({this.apiLocation});
 
   String newObjectID(){
     String increment = new Random().nextInt(16777216).floor().toRadixString(16);
@@ -38,43 +191,11 @@ class DataInterface {
     return new DateTime.now().millisecondsSinceEpoch ~/ 1000 | 0;
   }
 
-
-  openDB() async {
-    String dir = (await getApplicationDocumentsDirectory()).path;
-
-    print(dir + "assets/data.db");
-
-
-    Database database = await openDatabase(dir + "assets/data.db", version: 1,
-      onCreate: (Database db, int version) async {
-        print('successfully created');
-        // When creating the db, create the table
-        await db.execute(
-          "CREATE TABLE workouts (id INTEGER PRIMARY KEY, mongoID TEXT, type TEXT, date TEXT)");
-      }
-    );
-
-    int testTimeStamp = timeStamp();
-
-    MetaWorkout test = new MetaWorkout(sqlID: testTimeStamp, mongoID: "mongoID", type: "pullTest", date: "2017-11-13");
-
-    //await database.insert("workouts", test.toMap());
-
-    List<Map> maps = await database.query("workouts",
-        columns: ["id", "mongoID", "type", "date"],
-        where: "id = ?",
-        whereArgs: [testTimeStamp]);
-    if (maps.length > 0) {
-      print(new MetaWorkout.fromMap(maps.first).type);
-    }
-  }
-
-
   getMetaWorkouts() async {
 
     print(newObjectID());
 
-    List<MetaWorkout> metaWorkouts = [];
+    List<Workout> metaWorkouts = [];
 
     String url = apiLocation + '/workouts/meta/';
     var response = await client.read(url);
@@ -82,7 +203,7 @@ class DataInterface {
 
     //convert response objects into MetaWorkouts
     for(int i = 0; i < data.length; i++){
-      metaWorkouts.add(new MetaWorkout.fromMap(data[i]));
+      metaWorkouts.add(new Workout.fromMap(data[i]));
     }
 
     return metaWorkouts;
@@ -93,7 +214,7 @@ class DataInterface {
     var response = await client.read(url);
     Map data = JSON.decode(response);
 
-    return new Workout.fromResponse(data);
+    return new Workout.fromMap(data);
   }
 
 }

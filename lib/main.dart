@@ -3,11 +3,41 @@ import 'package:flutter/material.dart';
 import 'single_workout.dart';
 import 'workout_list.dart';
 
-void main() {
-  runApp(new WorkoutTrackerClient());
+import 'models.dart';
+import 'data_interface.dart';
+
+doDataStuff() async {
+  DatabaseInterface di = new DatabaseInterface();
+  await di.open();
+
+  int id = await di.addMetaWorkout(new MetaWorkout(type: "pull", date: "2017-11-18"));
+
+  await di.close();
+  //MetaWorkout testing = await di.getMetaWorkoutByID(id);
+  //print(testing.type);
+
+  //int id = await di.addMetaExercise(new MetaExercise(type: "exercise test 1", date: "2017-11-13"));
+
+  //MetaExercise testing = await di.getMetaExerciseByID(id);
+  //print(testing.toString());
+
+  //List<MetaWorkout> workouts = await di.getAllMetaWorkouts();
+  //List<MetaExercise> exercises = await di.getAllMetaExercises();
 }
 
-class WorkoutTrackerClient extends StatelessWidget {
+void main() {
+  runApp(new WorkoutTracker());
+}
+
+class WorkoutTracker extends StatefulWidget {
+
+  final DatabaseInterface interface = new DatabaseInterface();
+
+  @override
+  _WorkoutTrackerState createState() => new _WorkoutTrackerState();
+}
+
+class _WorkoutTrackerState extends State<WorkoutTracker> {
 
   //taken from:
   //https://github.com/flutter/flutter/blob/master/examples/stocks/lib/main.dart#L122
@@ -38,13 +68,16 @@ class WorkoutTrackerClient extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+
+    print(widget.interface);
+
     return new MaterialApp(
       title: 'Workout Tracker',
       theme: new ThemeData(
         primarySwatch: Colors.blue,
       ),
       routes: <String, WidgetBuilder>{
-        '/': (BuildContext context) => new WorkoutList(),
+        '/': (BuildContext context) => new WorkoutList(interface: widget.interface),
       },
       onGenerateRoute: _getRoute,
     );

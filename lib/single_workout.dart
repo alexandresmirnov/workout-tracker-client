@@ -18,8 +18,8 @@ class _SingleWorkoutState extends State<SingleWorkout>{
   List<bool> _expansionControl = [];
 
   _getWorkout(date) async {
-    DataInterface di = new DataInterface(apiLocation: "http://192.168.1.2:8080/api");
-    Workout w = await di.getWorkout(date);
+    ApiInterface interface = new ApiInterface(apiLocation: "http://192.168.1.2:8080/api");
+    Workout w = await interface.getWorkout(date);
 
     setState(() {
       _displayWorkout = w;

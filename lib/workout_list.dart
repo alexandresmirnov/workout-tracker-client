@@ -5,7 +5,9 @@ import 'data_interface.dart';
 
 //creates list with meta workouts that lead to SingleWorkout
 class WorkoutList extends StatefulWidget {
-  WorkoutList({Key key}) : super(key: key);
+  final DatabaseInterface interface;
+
+  WorkoutList({Key key, this.interface}) : super(key: key);
 
   @override
   _WorkoutListState createState() => new _WorkoutListState();
@@ -13,14 +15,21 @@ class WorkoutList extends StatefulWidget {
 
 class _WorkoutListState extends State<WorkoutList>{
 
-  List<MetaWorkout> _metaWorkouts = [];
+  List<Workout> _metaWorkouts = [];
 
   _getMetaWorkouts() async {
-    DataInterface di = new DataInterface(apiLocation: "http://192.168.1.2:8080/api");
-    List<MetaWorkout> metaWorkouts = await di.getMetaWorkouts();
+    await widget.interface.open();
+
+    List<MetaWorkout> metaWorkouts = await widget.interface.getAllMetaWorkouts();
+
+    widget.interface.close();
+
+    List<Workout> workouts = metaWorkouts.map((MetaWorkout mw) {
+      return new Workout(name: "temp name", type: mw.type, date: mw.date, exercises: []);
+    }).toList();
 
     setState(() {
-      _metaWorkouts = metaWorkouts;
+      _metaWorkouts = workouts;
     });
   }
 
@@ -44,10 +53,10 @@ class _WorkoutListState extends State<WorkoutList>{
             mainAxisSize: MainAxisSize.min,
             children: ListTile.divideTiles(
               context: context,
-              tiles: this._metaWorkouts.map((MetaWorkout mw) {
-                return mw.createListTile(
+              tiles: this._metaWorkouts.map((Workout w) {
+                return w.createListTile(
                   onTap: (){
-                    Navigator.of(context).pushNamed('/workouts/date/'+mw.date);
+                    Navigator.of(context).pushNamed('/workouts/date/'+w.date);
                   }
                 );
               }),

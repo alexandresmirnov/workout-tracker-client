@@ -47,22 +47,85 @@ class Set {
   }
 }
 
+//representation of what's in database
+class MetaExercise {
+  int id; //id for storage in local sql database
+  String date;
+  String type;
+  String sets; //textual representation of an array of int ids of sets
+
+  MetaExercise({this.id, this.date, this.type, this.sets});
+
+  MetaExercise.defaultValues() {
+    this.id = 0;
+    this.date = "exercise date";
+    this.type = "exercise type";
+    this.sets = "";
+  }
+
+  String toString() {
+    return """
+      id: $id
+      date: $date
+      type: $type
+      sets: $sets
+    """;
+  }
+
+  Map toMap() {
+    Map map = new Map();
+    map['id'] = id;
+    map['date'] = date;
+    map['type'] = type;
+    map['sets'] = sets;
+    return map;
+  }
+
+  MetaExercise.fromMap(Map r) {
+    this.id = r['id'] ?? 0;
+    this.date = r['date'] ?? "exercise date";
+    this.type = r['type'] ?? "exercise type";
+    this.sets = r['sets'] ?? "";
+  }
+}
+
+//used for actual display
 class Exercise {
+  int id; //id for storage in local sql database
   String name;
   String date;
   String type;
   List<Set> sets;
 
-  Exercise({this.name, this.date, this.type, this.sets});
+  Exercise({this.id, this.name, this.date, this.type, this.sets});
 
   Exercise.defaultValues() {
+    this.id = 0;
     this.name = "exercise name";
     this.date = "exercise date";
     this.type = "exercise type";
     this.sets = [];
   }
 
-  Exercise.fromResponse(Map r) {
+  String toString() {
+    return """
+      id: $id
+      name: $name
+      date: $date
+      type: $type
+    """;
+  }
+
+  Map toMap() {
+    Map map = new Map();
+    map['id'] = id;
+    map['type'] = type;
+    map['date'] = date;
+    map['sets'] = sets;
+    return map;
+  }
+
+  Exercise.fromMap(Map r) {
     this.name = r['name'] ?? "exercise name";
     this.date = r['date'] ?? "exercise date";
     this.type = r['type'] ?? "exercise type";
@@ -114,43 +177,78 @@ class Exercise {
 }
 
 //for when exercises aren't populated
+//raw representation of what's in database
 class MetaWorkout {
-  int sqlID; //id for storage in local sql database
-  String mongoID; //string representation of Mongo ObjectID
-
+  int id; //id for storage in local sql database
   String type;
   String date;
-  String name;
-  List<String> exercises;
+  String name; //soon to be removed in favor of type->name lookup table
+  String exercises; //textual representation of an array of int ids of exercises
 
-  MetaWorkout({this.sqlID, this.mongoID, this.name, this.date, this.type, this.exercises});
+  MetaWorkout({this.id, this.name, this.date, this.type, this.exercises});
 
   MetaWorkout.defaultValues() {
-    this.sqlID = 0;
-    this.mongoID = "";
+    this.id = 0;
+    this.name = "workout name";
+    this.date = "workout date";
+    this.type = "workout type";
+    this.exercises = "";
+  }
+
+  String toString() {
+    return """
+      id: $id
+      name: $name
+      date: $date
+      type: $type
+      exercises: $exercises
+    """;
+  }
+
+  Map toMap() {
+    Map map = new Map();
+    map['id'] = id;
+    map['type'] = type;
+    map['date'] = date;
+    map['exercises'] = exercises;
+    return map;
+  }
+
+  MetaWorkout.fromMap(Map r) {
+    this.id = r['id'] ?? 0; //change to timestamp
+    this.name = r['name'] ?? "workout name";
+    this.date = r['date'] ?? "workout date";
+    this.type = r['type'] ?? "workout type";
+    this.exercises = r['exercises'] ?? "";
+  }
+}
+
+//object used when actually displaying a workout
+class Workout {
+  String name;
+  String date;
+  String type;
+  List<Exercise> exercises;
+
+  Workout({this.name, this.date, this.type, this.exercises});
+
+  Workout.defaultValues() {
     this.name = "workout name";
     this.date = "workout date";
     this.type = "workout type";
     this.exercises = [];
   }
 
-  Map toMap() {
-    Map map = new Map();
-    map['id'] = sqlID;
-    map['mongoID'] = mongoID;
-    map['type'] = type;
-    map['date'] = date;
-
-    return map;
-  }
-
-  MetaWorkout.fromMap(Map r) {
-    this.sqlID = r['sqlID'] ?? 0; //change to timestamp
-    this.mongoID = r['_id'] ?? "";
+  Workout.fromMap(Map r) {
     this.name = r['name'] ?? "workout name";
     this.date = r['date'] ?? "workout date";
     this.type = r['type'] ?? "workout type";
-    this.exercises = r['exercises'] ?? [];
+
+    List<Exercise> exercises = [];
+    for(int i = 0; i < r['exercises'].length; i++){
+      exercises.add(new Exercise.fromMap(r['exercises'][i]));
+    }
+    this.exercises = exercises;
   }
 
   createDataRow({Function onTap}){
@@ -208,33 +306,5 @@ class MetaWorkout {
         onTap: onTap,
       )
     );
-  }
-}
-
-class Workout {
-  String name;
-  String date;
-  String type;
-  List<Exercise> exercises;
-
-  Workout({this.name, this.date, this.type, this.exercises});
-
-  Workout.defaultValues() {
-    this.name = "workout name";
-    this.date = "workout date";
-    this.type = "workout type";
-    this.exercises = [];
-  }
-
-  Workout.fromResponse(Map r) {
-    this.name = r['name'] ?? "workout name";
-    this.date = r['date'] ?? "workout date";
-    this.type = r['type'] ?? "workout type";
-
-    List<Exercise> exercises = [];
-    for(int i = 0; i < r['exercises'].length; i++){
-      exercises.add(new Exercise.fromResponse(r['exercises'][i]));
-    }
-    this.exercises = exercises;
   }
 }
