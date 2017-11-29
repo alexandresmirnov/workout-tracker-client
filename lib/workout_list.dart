@@ -48,21 +48,25 @@ class _WorkoutListState extends State<WorkoutList>{
       ),
       body: new Container(
         padding: const EdgeInsets.all(11.0),
-        child: new Card(
-          child: new Column(
-            mainAxisSize: MainAxisSize.min,
-            children: ListTile.divideTiles(
-              context: context,
-              tiles: this._metaWorkouts.map((Workout w) {
-                return w.createListTile(
-                  onTap: (){
-                    Navigator.of(context).pushNamed('/workouts/date/'+w.date);
-                  }
-                );
-              }),
-              color: new Color(0xFFAAAAAA)
-            ).toList()
-          )
+        child: new ListView(
+          children: [
+            new Card(
+              child: new Column(
+                mainAxisSize: MainAxisSize.min,
+                children: ListTile.divideTiles(
+                  context: context,
+                  tiles: this._metaWorkouts.map((Workout w) {
+                    return w.createListTile(
+                      onTap: (){
+                        Navigator.of(context).pushNamed('/workouts/date/'+w.date);
+                      }
+                    );
+                  }),
+                  color: new Color(0xFFAAAAAA)
+                ).toList()
+              )
+            ),
+          ]
         ),
       ),
       floatingActionButton: new FloatingActionButton(

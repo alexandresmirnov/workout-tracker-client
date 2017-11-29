@@ -53,10 +53,10 @@ class _SingleWorkoutState extends State<SingleWorkout>{
   @override
   Widget build(BuildContext context){
 
-    List<ExpansionTile> tiles = [];
+    List<Card> cards = [];
 
     for(int i = 0; i < _displayWorkout.exercises.length; i++){
-      tiles.add(_displayWorkout.exercises[i].toExpansionTile());
+      cards.add(_displayWorkout.exercises[i].toCard());
     }
 
     return new Scaffold(
@@ -65,16 +65,9 @@ class _SingleWorkoutState extends State<SingleWorkout>{
       ),
       body: new Container(
         padding: const EdgeInsets.all(11.0),
-        child: new Card(
-          child: new Column(
-            mainAxisSize: MainAxisSize.min,
-            children: ListTile.divideTiles(
-              context: context,
-              tiles: tiles,
-              color: new Color(0xFFAAAAAA)
-            ).toList()
-          )
-        ),
+        child: new ListView(
+          children: cards
+        )
       ),
       floatingActionButton: new FloatingActionButton(
         tooltip: 'Add', // used by assistive technologies

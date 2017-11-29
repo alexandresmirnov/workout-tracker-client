@@ -45,6 +45,18 @@ class Set {
       }
     );
   }
+
+  createListTile({Function onTap}){
+    return new Container(
+      child: new ListTile(
+        leading: new Center(
+          child: new Text(reps.toString())
+        ),
+        title: new Text(weight.toString()),
+        onTap: onTap,
+      )
+    );
+  }
 }
 
 //used for actual display
@@ -132,8 +144,31 @@ class Exercise {
     );
   }
 
-  ExpansionTile toExpansionTile({isExpanded}) {
+  ExpansionTile toExpansionTile() {
     return new ExpansionTile(
+      leading: new CircleAvatar(
+        radius: 20.0,
+        backgroundColor: Colors.teal.shade500,
+        child: new Container(
+          margin: const EdgeInsets.only(top: 5.0),
+          child: new Column(
+            children: [
+              new Text(
+                sets.length.toString(),
+                style: new TextStyle(
+                  fontSize: 18.0,
+                )
+              ),
+              new Text(
+                "sets",
+                style: new TextStyle(
+                  fontSize: 8.0
+                )
+              ),
+            ]
+          )
+        )
+      ),
       title: new Text(
         this.name,
         textAlign: TextAlign.left,
@@ -147,23 +182,15 @@ class Exercise {
         tooltip: 'Edit',
         onPressed: () {},
       ),
-      children: [
-        new DataTable(
-          columns: <DataColumn>[
-            new DataColumn(
-              label: new Text("reps"),
-              numeric: true
-            ),
-            new DataColumn(
-              label: new Text("weight"),
-              numeric: true
-            )
-          ],
-          rows: this.sets.map((Set s) {
-            return s.createDataRow();
-          }).toList(),
-        ),
-      ],
+      children: this.sets.map((Set s) {
+        return s.createListTile();
+      }).toList(),
+    );
+  }
+
+  Card toCard() {
+    return new Card(
+      child: toExpansionTile()
     );
   }
 
