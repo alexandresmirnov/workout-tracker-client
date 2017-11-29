@@ -53,10 +53,10 @@ class _SingleWorkoutState extends State<SingleWorkout>{
   @override
   Widget build(BuildContext context){
 
-    List<ExpansionPanel> panels = [];
+    List<ExpansionTile> tiles = [];
 
     for(int i = 0; i < _displayWorkout.exercises.length; i++){
-      panels.add(_displayWorkout.exercises[i].toExpansionPanel(isExpanded: _expansionControl[i]));
+      tiles.add(_displayWorkout.exercises[i].toExpansionTile());
     }
 
     return new Scaffold(
@@ -64,19 +64,17 @@ class _SingleWorkoutState extends State<SingleWorkout>{
         title: new Text(_displayWorkout.name + " (" + _displayWorkout.date + ")"),
       ),
       body: new Container(
-        padding: const EdgeInsets.all(16.0),
-        child: new Column(
-          children: <Widget>[
-            new ExpansionPanelList(
-              children: panels,
-              expansionCallback: (int panelIndex, bool isExpanded) {
-                setState(() {
-                  _expansionControl[panelIndex] = !isExpanded;
-                });
-              }
-            )
-          ]
-        )
+        padding: const EdgeInsets.all(11.0),
+        child: new Card(
+          child: new Column(
+            mainAxisSize: MainAxisSize.min,
+            children: ListTile.divideTiles(
+              context: context,
+              tiles: tiles,
+              color: new Color(0xFFAAAAAA)
+            ).toList()
+          )
+        ),
       ),
       floatingActionButton: new FloatingActionButton(
         tooltip: 'Add', // used by assistive technologies

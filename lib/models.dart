@@ -34,9 +34,6 @@ class Set {
     return new DataRow(
       cells: <DataCell>[
         new DataCell(
-          new Text("1")
-        ),
-        new DataCell(
           new Text(this.reps.toString())
         ),
         new DataCell(
@@ -132,6 +129,41 @@ class Exercise {
         }).toList(),
       ),
       isExpanded: isExpanded
+    );
+  }
+
+  ExpansionTile toExpansionTile({isExpanded}) {
+    return new ExpansionTile(
+      title: new Text(
+        this.name,
+        textAlign: TextAlign.left,
+        style: new TextStyle(
+          fontSize: 20.0,
+          fontWeight: FontWeight.w400,
+        ),
+      ),
+      trailing: new IconButton(
+        icon: new Icon(Icons.edit),
+        tooltip: 'Edit',
+        onPressed: () {},
+      ),
+      children: [
+        new DataTable(
+          columns: <DataColumn>[
+            new DataColumn(
+              label: new Text("reps"),
+              numeric: true
+            ),
+            new DataColumn(
+              label: new Text("weight"),
+              numeric: true
+            )
+          ],
+          rows: this.sets.map((Set s) {
+            return s.createDataRow();
+          }).toList(),
+        ),
+      ],
     );
   }
 
