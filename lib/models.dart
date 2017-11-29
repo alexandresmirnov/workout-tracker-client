@@ -42,7 +42,10 @@ class Set {
         new DataCell(
           new Text(this.weight.toString())
         )
-      ]
+      ],
+      onSelectChanged: (bool value) {
+        print(value);
+      }
     );
   }
 }

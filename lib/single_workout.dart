@@ -77,7 +77,12 @@ class _SingleWorkoutState extends State<SingleWorkout>{
             )
           ]
         )
-      )
+      ),
+      floatingActionButton: new FloatingActionButton(
+        tooltip: 'Add', // used by assistive technologies
+        child: new Icon(Icons.add),
+        onPressed: null,
+      ),
     );
   }
 }

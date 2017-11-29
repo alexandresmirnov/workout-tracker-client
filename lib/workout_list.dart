@@ -20,6 +20,7 @@ class _WorkoutListState extends State<WorkoutList>{
   _getMetaWorkouts() async {
     await widget.interface.open();
 
+    //await widget.interface.testThings();
 
     //await widget.interface.resetData();
 
@@ -46,7 +47,7 @@ class _WorkoutListState extends State<WorkoutList>{
         title: new Text("All Workouts"),
       ),
       body: new Container(
-        padding: const EdgeInsets.all(16.0),
+        padding: const EdgeInsets.all(11.0),
         child: new Card(
           child: new Column(
             mainAxisSize: MainAxisSize.min,
@@ -63,6 +64,11 @@ class _WorkoutListState extends State<WorkoutList>{
             ).toList()
           )
         ),
+      ),
+      floatingActionButton: new FloatingActionButton(
+        tooltip: 'Add', // used by assistive technologies
+        child: new Icon(Icons.add),
+        onPressed: null,
       ),
     );
   }
