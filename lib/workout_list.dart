@@ -21,15 +21,11 @@ class _WorkoutListState extends State<WorkoutList>{
     await widget.interface.open();
 
 
-    await widget.interface.resetData();
+    //await widget.interface.resetData();
 
-    List<MetaWorkout> metaWorkouts = await widget.interface.getAllMetaWorkouts();
+    List<Workout> workouts = await widget.interface.getAllWorkoutsUnpopulated();
 
     await widget.interface.close();
-
-    List<Workout> workouts = metaWorkouts.map((MetaWorkout mw) {
-      return new Workout(id: mw.id, name: "temp name", type: mw.type, date: mw.date, exercises: []);
-    }).toList();
 
     setState(() {
       _metaWorkouts = workouts;

@@ -21,7 +21,7 @@ String monthFromInt(int month){
 
 class Set {
   int reps = 0;
-  int weight = 0;
+  num weight = 0.0;
 
   Set({this.reps, this.weight});
 
@@ -44,49 +44,6 @@ class Set {
         )
       ]
     );
-  }
-}
-
-//representation of what's in database
-class MetaExercise {
-  int id; //id for storage in local sql database
-  String date;
-  String type;
-  String sets; //textual representation of an array of int ids of sets
-  //List<int> sets;
-
-  MetaExercise({this.id, this.date, this.type, this.sets});
-
-  MetaExercise.defaultValues() {
-    this.id = 0;
-    this.date = "exercise date";
-    this.type = "exercise type";
-    this.sets = "";
-  }
-
-  String toString() {
-    return """
-      id: $id
-      date: $date
-      type: $type
-      sets: $sets
-    """;
-  }
-
-  Map toMap() {
-    Map map = new Map();
-    map['id'] = id;
-    map['date'] = date;
-    map['type'] = type;
-    map['sets'] = sets;
-    return map;
-  }
-
-  MetaExercise.fromMap(Map r) {
-    this.id = r['id'] ?? 0;
-    this.date = r['date'] ?? "exercise date";
-    this.type = r['type'] ?? "exercise type";
-    this.sets = r['sets'] ?? "";
   }
 }
 
@@ -175,54 +132,6 @@ class Exercise {
     );
   }
 
-}
-
-//for when exercises aren't populated
-//raw representation of what's in database
-class MetaWorkout {
-  int id; //id for storage in local sql database
-  String type;
-  String date;
-  String name; //soon to be removed in favor of type->name lookup table
-  String exercises; //textual representation of an array of int ids of exercises
-  //List<int> exercises;
-
-  MetaWorkout({this.id, this.name, this.date, this.type, this.exercises});
-
-  MetaWorkout.defaultValues() {
-    this.id = 0;
-    this.name = "workout name";
-    this.date = "workout date";
-    this.type = "workout type";
-    this.exercises = "";
-  }
-
-  String toString() {
-    return """
-      id: $id
-      name: $name
-      date: $date
-      type: $type
-      exercises: $exercises
-    """;
-  }
-
-  Map toMap() {
-    Map map = new Map();
-    map['id'] = id;
-    map['type'] = type;
-    map['date'] = date;
-    map['exercises'] = exercises;
-    return map;
-  }
-
-  MetaWorkout.fromMap(Map r) {
-    this.id = r['id'] ?? 0; //change to timestamp
-    this.name = r['name'] ?? "workout name";
-    this.date = r['date'] ?? "workout date";
-    this.type = r['type'] ?? "workout type";
-    this.exercises = r['exercises'] ?? "";
-  }
 }
 
 //object used when actually displaying a workout

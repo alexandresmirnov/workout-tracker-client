@@ -12,13 +12,169 @@ import 'models.dart';
  * also, this will manage the local SQL database and sync operations
  */
 
+//helper functions
+int timeStamp(){
+  return new DateTime.now().millisecondsSinceEpoch | 0;
+}
+
+String listToString(List l){
+  String result = "";
+
+  for(int i = 0; i < l.length; i++){
+   result += l[i].toString();
+   if(i < l.length - 1){
+     result += ",";
+   }
+  }
+
+  return(result);
+}
+
+List<String> stringToList(String s){
+  return s.split(",");
+}
+
+List<int> stringToIntList(String s){
+  List<String> stringList = stringToList(s);
+  List<int> intList = [];
+
+  for(int i = 0; i < stringList.length; i++){
+   intList.add(int.parse(stringList[i]));
+  }
+
+  return intList;
+}
+
+//for when exercises aren't populated
+//raw representation of what's in database
+class DatabaseWorkout {
+  int id; //id for storage in local sql database
+  String type;
+  String date;
+  String name; //soon to be removed in favor of type->name lookup table
+  String exercises; //textual representation of an array of int ids of exercises
+
+  DatabaseWorkout({this.id, this.name, this.date, this.type, this.exercises});
+
+  DatabaseWorkout.defaultValues() {
+    this.id = 0;
+    this.name = "workout name";
+    this.date = "workout date";
+    this.type = "workout type";
+    this.exercises = "";
+  }
+
+  String toString() {
+    return """
+     id: $id
+     name: $name
+     date: $date
+     type: $type
+     exercises: $exercises
+    """;
+  }
+
+  Map toMap() {
+    Map map = new Map();
+    map['id'] = id;
+    map['type'] = type;
+    map['date'] = date;
+    map['exercises'] = exercises;
+    return map;
+  }
+
+  DatabaseWorkout.fromMap(Map r) {
+    this.id = r['id'] ?? 0; //change to timestamp
+    this.name = r['name'] ?? "workout name";
+    this.date = r['date'] ?? "workout date";
+    this.type = r['type'] ?? "workout type";
+    this.exercises = r['exercises'] ?? "";
+  }
+}
+
+//representation of what's in database
+class DatabaseExercise {
+  int id; //id for storage in local sql database
+  String date;
+  String type;
+  String sets; //textual representation of an array of int ids of sets
+
+  DatabaseExercise({this.id, this.date, this.type, this.sets});
+
+  DatabaseExercise.defaultValues() {
+    this.id = 0;
+    this.date = "exercise date";
+    this.type = "exercise type";
+    this.sets = "";
+  }
+
+  String toString() {
+    return """
+      id: $id
+      date: $date
+      type: $type
+      sets: $sets
+    """;
+  }
+
+  Map toMap() {
+    Map map = new Map();
+    map['id'] = id;
+    map['date'] = date;
+    map['type'] = type;
+    map['sets'] = sets;
+    return map;
+  }
+
+  DatabaseExercise.fromMap(Map r) {
+    this.id = r['id'] ?? 0;
+    this.date = r['date'] ?? "exercise date";
+    this.type = r['type'] ?? "exercise type";
+    this.sets = r['sets'] ?? "";
+  }
+}
+
+class DatabaseSet {
+  int id;
+  int reps = 0;
+  num weight = 0.0;
+
+  DatabaseSet({this.id, this.reps, this.weight});
+
+  DatabaseSet.defaultValues() {
+    this.id = 0;
+    this.reps = 0;
+    this.weight = 0.0;
+  }
+
+  String toString() {
+    return """
+      id: $id
+      reps: $reps
+      weight: $weight
+    """;
+  }
+
+  Map toMap() {
+    Map map = new Map();
+    map['id'] = id;
+    map['reps'] = reps;
+    map['weight'] = weight;
+    return map;
+  }
+
+  DatabaseSet.fromMap(Map r) {
+    this.id = r['id'] ?? 0;
+    this.reps = r['reps'] ?? 0;
+    this.weight = r['weight'] ?? 0.0;
+  }
+}
+
 class DatabaseInterface {
 
   Database database;
 
-  int timeStamp(){
-    return new DateTime.now().millisecondsSinceEpoch | 0;
-  }
+  //methods client has access to
 
   open() async {
     String dir = (await getApplicationDocumentsDirectory()).path;
@@ -29,222 +185,280 @@ class DatabaseInterface {
       onCreate: (Database db, int version) async {
         //print('successfully created');
         // When creating the db (for the very first time), create the table
-        await createTables();
+        await _createTables();
       }
     );
 
     this.database = database;
   }
 
-  deleteTables() async {
-    await database.execute(
-      "DROP TABLE workouts");
-    await database.execute(
-      "DROP TABLE exercises");
-  }
-
-  createTables() async {
-    await database.execute(
-      "CREATE TABLE workouts (id INTEGER PRIMARY KEY, type TEXT, date TEXT, exercises TEXT)");
-    await database.execute(
-      "CREATE TABLE exercises (id INTEGER PRIMARY KEY, type TEXT, date TEXT, sets TEXT)");
-  }
-
-  addSampleData() async {
-    int exerciseid = await addMetaExercise(new MetaExercise(type: "squat", date: "2017-11-17", sets: ""));
-
-    ////print("sample exercise id: $exerciseid");
-
-    int workoutid = await addMetaWorkout(new MetaWorkout(type: "pull", date: "2017-11-17", exercises: exerciseid.toString()));
-
-    ////print("sample workout id: $workoutid");
-  }
-
-  resetData() async {
-    await deleteTables();
-    await createTables();
-    await addSampleData();
-  }
-
   close() async {
     await database.close();
   }
 
-  String listToString(List l){
-    String result = "";
+  resetData() async {
+    await _deleteTables();
+    await _createTables();
+    await _addSampleData();
+  }
 
-    for(int i = 0; i < l.length; i++){
-      result += l[i].toString();
-      if(i < l.length - 1){
-        result += ",";
-      }
+  //get List<Workout> with populated exercises
+  getWorkoutsByDate(String date) async {
+    ////print("getWorkoutsByDate($date)");
+
+    List<DatabaseWorkout> databaseWorkouts = await _getDatabaseWorkoutsByDate(date);
+    List<Workout> workouts = [];
+    Workout currWorkout;
+
+    for(int i = 0; i < databaseWorkouts.length; i++){
+      currWorkout = await _generateWorkout(databaseWorkouts[i]);
+      workouts.add(currWorkout);
     }
 
-    return(result);
+    return workouts;
   }
 
-  List<String> stringToList(String s){
-    return s.split(",");
+  //TODO: split populated/unpopulated into two classes
+
+  //returns List<Workout> with unpopulated exercises (empty exercise field)
+  getAllWorkoutsUnpopulated() async {
+    List<DatabaseWorkout> databaseWorkouts = await _getAllDatabaseWorkouts();
+
+    List<Workout> workouts = databaseWorkouts.map((DatabaseWorkout mw) {
+      return new Workout(id: mw.id, name: "temp name", type: mw.type, date: mw.date, exercises: []);
+    }).toList();
+
+    return workouts;
   }
 
-  List<int> stringToIntList(String s){
-    List<String> stringList = stringToList(s);
-    List<int> intList = [];
+  //returns List<Workout> with populated exercises (all the way down to sets)
+  getAllWorkoutsPopulated() async {
+    List<DatabaseWorkout> databaseWorkouts = await _getAllDatabaseWorkouts();
 
-    for(int i = 0; i < stringList.length; i++){
-      intList.add(int.parse(stringList[i]));
+    return databaseWorkouts.map((DatabaseWorkout dw) {
+      return _generateWorkout(dw);
+    }).toList();
+  }
+
+  //private methods for interacting directly with database
+
+  _deleteTables() async {
+    await database.execute(
+      "DROP TABLE workouts");
+    await database.execute(
+      "DROP TABLE exercises");
+    await database.execute(
+      "DROP TABLE sets");
+  }
+
+  _createTables() async {
+    await database.execute(
+      "CREATE TABLE workouts (id INTEGER PRIMARY KEY, type TEXT, date TEXT, exercises TEXT)");
+    await database.execute(
+      "CREATE TABLE exercises (id INTEGER PRIMARY KEY, type TEXT, date TEXT, sets TEXT)");
+    await database.execute(
+      "CREATE TABLE sets (id INTEGER PRIMARY KEY, reps INTEGER, weight REAL)");
+  }
+
+  _addSampleData() async {
+
+    List<int> setIDs = [];
+    int setID;
+
+    for(int i = 0; i < 4; i++){
+      setID = await _addDatabaseSet(new DatabaseSet(reps: 10, weight: 130));
+      setIDs.add(setID);
     }
 
-    return intList;
+    int exerciseID = await _addDatabaseExercise(new DatabaseExercise(type: "squat", date: "2017-11-17", sets: listToString(setIDs)));
+
+    //print("sample exerciseid: $exerciseID");
+
+    int workoutID = await _addDatabaseWorkout(new DatabaseWorkout(type: "pull", date: "2017-11-17", exercises: exerciseID.toString()));
+
+    //print("sample workout id: $workoutid");
   }
 
-  //MetaWorkout operations
-  addMetaWorkout(MetaWorkout mw) async {
+  //DatabaseWorkout -> populated Workout
+  _generateWorkout(DatabaseWorkout dw) async {
+    Workout workout; //this is what we'll be returning
+
+    List<int> exerciseIDs = stringToIntList(dw.exercises);
+    List<Exercise> exercises = [];
+    DatabaseExercise currDatabaseExercise;
+    Exercise currExercise;
+
+    //populate exercises
+    for(int j = 0; j < exerciseIDs.length; j++){
+      currDatabaseExercise = await _getDatabaseExerciseByID(exerciseIDs[j]);
+      currExercise = await _generateExercise(currDatabaseExercise);
+      exercises.add(currExercise);
+    }
+
+    //at this point, exercises is a List<Exercise>
+
+    workout = new Workout(
+      id: dw.id,
+      name: "temp name",
+      type: dw.type,
+      date: dw.date,
+      exercises: exercises,
+    );
+
+    return workout;
+  }
+
+  //DatabaseWorkout operations
+  _addDatabaseWorkout(DatabaseWorkout mw) async {
     int timestamp = timeStamp();
 
     ////print("workout timestamp: $timestamp");
 
-    MetaWorkout newmetaworkout = new MetaWorkout(id: timestamp, type: mw.type, date: mw.date, exercises: mw.exercises);
+    DatabaseWorkout newDatabaseWorkout = new DatabaseWorkout(id: timestamp, type: mw.type, date: mw.date, exercises: mw.exercises);
 
-    ////print("inserting new meta workout: $newmetaworkout");
+    print("inserting new meta workout: $newDatabaseWorkout");
 
-    await database.insert("workouts", newmetaworkout.toMap());
+    await database.insert("workouts", newDatabaseWorkout.toMap());
 
     return timestamp;
   }
 
-  getMetaWorkoutByID(int id) async {
+  _getDatabaseWorkoutByID(int id) async {
     List<Map> maps = await database.query("workouts",
         columns: ["id", "type", "date", "exercises"],
         where: "id = ?",
         whereArgs: [id]);
     if (maps.length > 0) {
-      return new MetaWorkout.fromMap(maps.first);
+      return new DatabaseWorkout.fromMap(maps.first);
     }
   }
 
-  //get List<MetaWorkout> with unpopulated exercises (left as int IDs)
-  getMetaWorkoutsByDate(String date) async {
+  //get List<DatabaseWorkout> with unpopulated exercises (left as int IDs)
+  _getDatabaseWorkoutsByDate(String date) async {
     List<Map> maps = await database.query("workouts",
         columns: ["id", "type", "date", "exercises"],
         where: "date = ?",
         whereArgs: [date]);
 
-    List<MetaWorkout> result = [];
+    List<DatabaseWorkout> result = [];
     for(int i = 0; i < maps.length; i++){
-      result.add(new MetaWorkout.fromMap(maps[i]));
+      result.add(new DatabaseWorkout.fromMap(maps[i]));
     }
 
     return result;
   }
 
-  //get List<Workout> with exercises as Exercise objects
-  getWorkoutsByDate(String date) async {
-    ////print("getWorkoutsByDate($date)");
-
-    List<Map> maps = await database.query("workouts",
-        columns: ["id", "type", "date", "exercises"],
-        where: "date = ?",
-        whereArgs: [date]);
-
-    List<Workout> result = [];
-    Workout currWorkout;
-    List<int> exerciseIDs;
-
-    MetaExercise currMetaExercise;
-    List<Exercise> currExercises = [];
-
-    for(int i = 0; i < maps.length; i++){
-
-      exerciseIDs = stringToIntList(maps[i]['exercises']);
-
-      //print("exerciseIDs: $exerciseIDs");
-
-      for(int j = 0; j < exerciseIDs.length; j++){
-        currMetaExercise = await getMetaExerciseByID(exerciseIDs[j]);
-
-        //print("currMetaExercise: $currMetaExercise");
-
-        currExercises.add(new Exercise(
-          name: "temp exercise name",
-          id: currMetaExercise.id,
-          type: currMetaExercise.type,
-          date: currMetaExercise.date,
-          sets: [] //populate in a sec
-        ));
-      }
-
-      currWorkout = new Workout(
-        id: maps[i]['id'],
-        name: "temp name",
-        type: maps[i]['type'],
-        date: maps[i]['date'],
-        exercises: currExercises,
-      );
-      result.add(currWorkout);
-    }
-
-    return result;
-  }
-
-  getAllMetaWorkouts() async {
+  _getAllDatabaseWorkouts() async {
     List<Map> maps = await database.query("workouts");
 
-    List<MetaWorkout> result = [];
+    List<DatabaseWorkout> result = [];
     for(int i = 0; i < maps.length; i++){
-      result.add(new MetaWorkout.fromMap(maps[i]));
+      result.add(new DatabaseWorkout.fromMap(maps[i]));
     }
 
     return result;
   }
 
   //Exercise operations
-  addMetaExercise(MetaExercise e) async {
+  //DatabaseExercise -> populated Exercise
+  _generateExercise(DatabaseExercise de) async {
+    Exercise exercise; //this is what we'll be returning
+
+    List<int> setIDs = stringToIntList(de.sets);
+    List<Set> sets = [];
+    DatabaseSet currDatabaseSet;
+
+    //populate current exercise's sets
+    for(int k = 0; k < setIDs.length; k++){
+      currDatabaseSet = await _getDatabaseSetByID(setIDs[k]);
+      sets.add(new Set(
+        reps: currDatabaseSet.reps,
+        weight: currDatabaseSet.weight
+      ));
+    }
+
+    //add the now-populated exercise
+    exercise = new Exercise(
+      name: "temp exercise name",
+      id: de.id,
+      type: de.type,
+      date: de.date,
+      sets: sets
+    );
+
+    return exercise;
+  }
+
+  _addDatabaseExercise(DatabaseExercise e) async {
     int timestamp = timeStamp();
     ////print("exercise timestamp: $timestamp");
 
-    MetaExercise newmetaexercise = new MetaExercise(id: timestamp, type: e.type, date: e.date, sets: e.sets);
+    DatabaseExercise newDatabaseExercise = new DatabaseExercise(id: timestamp, type: e.type, date: e.date, sets: e.sets);
 
-    ////print("inserting new meta workout: $newmetaexercise");
+    print("inserting new meta workout: $newDatabaseExercise");
 
-    await database.insert("exercises", newmetaexercise.toMap());
+    await database.insert("exercises", newDatabaseExercise.toMap());
 
     return timestamp;
   }
 
-  getMetaExerciseByID(int id) async {
+  _getDatabaseExerciseByID(int id) async {
     List<Map> maps = await database.query("exercises",
         columns: ["id", "type", "date", "sets"],
         where: "id = ?",
         whereArgs: [id]);
     if (maps.length > 0) {
-      return new MetaExercise.fromMap(maps.first);
+      return new DatabaseExercise.fromMap(maps.first);
     }
   }
 
-  getMetaExercisesByDate(String date) async {
+  _getDatabaseExercisesByDate(String date) async {
     List<Map> maps = await database.query("exercises",
         columns: ["id", "type", "date", "sets"],
         where: "date = ?",
         whereArgs: [date]);
 
-    List<MetaExercise> result = [];
+    List<DatabaseExercise> result = [];
     for(int i = 0; i < maps.length; i++){
-      result.add(new MetaExercise.fromMap(maps[i]));
+      result.add(new DatabaseExercise.fromMap(maps[i]));
     }
 
     return result;
   }
 
-  getAllMetaExercises() async {
+  _getAllDatabaseExercises() async {
     List<Map> maps = await database.query("workouts");
 
-    List<MetaExercise> result = [];
+    List<DatabaseExercise> result = [];
     for(int i = 0; i < maps.length; i++){
-      result.add(new MetaExercise.fromMap(maps[i]));
+      result.add(new DatabaseExercise.fromMap(maps[i]));
     }
 
     return result;
+  }
+
+  //Set operations
+  _addDatabaseSet(DatabaseSet s) async {
+    int timestamp = timeStamp();
+    ////print("exercise timestamp: $timestamp");
+
+    DatabaseSet newDatabaseSet = new DatabaseSet(id: timestamp, reps: s.reps, weight: s.weight);
+
+    ////print("inserting new meta workout: $newDatabaseExercise");
+
+    await database.insert("sets", newDatabaseSet.toMap());
+
+    return timestamp;
+  }
+
+  _getDatabaseSetByID(int id) async {
+    List<Map> maps = await database.query("sets",
+        columns: ["id", "reps", "weight"],
+        where: "id = ?",
+        whereArgs: [id]);
+    if (maps.length > 0) {
+      return new DatabaseSet.fromMap(maps.first);
+    }
   }
 }
 
@@ -275,22 +489,22 @@ class ApiInterface {
     return new DateTime.now().millisecondsSinceEpoch ~/ 1000 | 0;
   }
 
-  getMetaWorkouts() async {
+  _getDatabaseWorkouts() async {
 
     ////print(newObjectID());
 
-    List<Workout> metaWorkouts = [];
+    List<Workout> DatabaseWorkouts = [];
 
     String url = apiLocation + '/workouts/meta/';
     var response = await client.read(url);
     List data = JSON.decode(response); //list of objects to be converted
 
-    //convert response objects into MetaWorkouts
+    //convert response objects into DatabaseWorkouts
     for(int i = 0; i < data.length; i++){
-      metaWorkouts.add(new Workout.fromMap(data[i]));
+      DatabaseWorkouts.add(new Workout.fromMap(data[i]));
     }
 
-    return metaWorkouts;
+    return DatabaseWorkouts;
   }
 
   getWorkout(date) async {
